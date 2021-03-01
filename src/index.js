@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const enableWs = require('express-ws')
 const cp = require('child_process');
 const ffmpeg = require('ffmpeg-static');
 const ytdl = require('ytdl-core')
@@ -11,8 +12,7 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(cors())
-
-app.listen(8080);
+enableWs(app)
 
 app.post('/video', (req, res) => {
   const video = ytdl(req.body.url, {format: req.body.format[1]})
@@ -44,29 +44,6 @@ app.post('/video', (req, res) => {
   ffmpegProcess.stdio[3].pipe(res);
 })
 
-app.post('/info', async (req, res) => {
-  let videos;
-  try {
-    const result = await ytpl(req.body.url, { pages: Infinity })
-    videos = result.items.map((val, i) => val.shortUrl);
-  } catch {
-    videos = [...req.body.url]
-  }
-  console.log(videos)
-  const all = [];
-
-  for(const vid of videos) {
-    all.push(getInfo(vid))
-  }
-
-  Promise.all(all)
-  .then(val => {
-    const filtered = val.filter((val, i) => val.info)
-    console.log(filtered)
-    res.send(filtered)
-  })
-})
-
 const getInfo = (url) => {
   return new Promise(async (res, rej) => {
     try {
@@ -80,4 +57,34 @@ const getInfo = (url) => {
   })
 }
 
-console.log('Open!')
+app.ws('/info', (socket, req) => {
+  socket.on('message', async (msg) => {
+    console.log(msg)
+    let videos;
+      try {
+        const result = await ytpl(msg, { pages: Infinity })
+        videos = result.items.map((val, i) => val.shortUrl);
+      } catch {
+        videos = [msg]
+      }
+      console.log(videos)
+      const all = [];
+
+      for(const vid of videos) {
+        all.push(getInfo(vid))
+      }
+
+      Promise.all(all)
+      .then(val => {
+        const filtered = val.filter((val, i) => val.info)
+        console.log(filtered)
+        socket.send(JSON.stringify(filtered))
+      })
+    })
+
+  socket.on('close', () => {
+    console.log('WebSocket was closed')
+  })
+})
+
+app.listen(8080, () => {console.log(`Server open on port 8080`)})

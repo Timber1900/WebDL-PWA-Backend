@@ -7,9 +7,15 @@
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "express-ws": "^4.0.0",
     "ffmpeg-static": "^4.2.7",
+    "websocket-stream": "^5.5.2",
+    "ws": "^7.4.3",
     "youtube-dl-wrap": "^2.0.0",
     "ytdl-core": "^4.5.0",
     "ytpl": "^2.0.5"
+  },
+  "devDependencies": {
+    "@types/express-ws": "^3.0.0"
   }
 }
