@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "license": "MIT",
+  "scripts": {
+    "start": "node src"
+  },
   "dependencies": {
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
